@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>像素画框</title>
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+  <header>
+    <h1>像素画框</h1>
+    <p>把喜欢的画面，变成桌上的一盏小灯</p>
+  </header>
+
+  <div class="sizes" role="group" aria-label="分辨率">
+    <button id="size16">16 × 16</button>
+    <button id="size32" class="on">32 × 32</button>
+  </div>
+
+  <section class="conn" aria-label="画框连接设置">
+    <div class="conn-row">
+      <label for="ip">画框 IP</label>
+      <input id="ip" type="text" inputmode="decimal" placeholder="例如 192.168.1.50" autocomplete="off">
+    </div>
+    <label class="demo-row">
+      <input type="checkbox" id="demo" checked>
+      演示模式（不真的发送，只在控制台打印）
+    </label>
+  </section>
+
+  <main class="frame">
+    <div id="grid" role="img" aria-label="16乘16的像素画预览"></div>
+  </main>
+
+  <div class="actions">
+    <button id="btn-upload">上传照片</button>
+    <button id="btn-draw">手绘</button>
+    <button id="btn-ai">AI 生成</button>
+  </div>
+  <button id="btn-send">发送到画框</button>
+  <input type="file" id="file" accept="image/*" hidden>
+
+  <div class="ai" id="ai" hidden>
+    <input type="text" id="ai-prompt" maxlength="60" placeholder="想画什么？例如：戴帽子的小猫" autocomplete="off">
+    <div class="ai-row">
+      <button id="ai-go">生成</button>
+      <button id="ai-idea">随机灵感</button>
+    </div>
+    <label class="demo-row">
+      画法
+      <select id="ai-mode" style="flex:1;font:inherit;color:var(--text);background:var(--off);border:0;border-radius:10px;padding:8px 10px">
+        <option value="svg">矢量图再转像素（推荐，形状更准）</option>
+        <option value="grid">逐格直接画（不稳定）</option>
+      </select>
+    </label>
+    <label class="demo-row">
+      <input type="checkbox" id="ai-demo" checked>
+      离线演示（不联网，用内置示例图测试流程）
+    </label>
+    <details>
+      <summary>接口设置（真正调用 AI 时才需要）</summary>
+      <label for="ai-base">接口地址（OpenAI 兼容格式，到 /v1 为止）</label>
+      <input type="text" id="ai-base" placeholder="在模型官方文档里找" autocomplete="off">
+      <label for="ai-model">模型名</label>
+      <input type="text" id="ai-model" placeholder="在模型官方文档里找" autocomplete="off">
+      <label for="ai-key">API Key（只保存在当前标签页，关掉就清除）</label>
+      <input type="password" id="ai-key" autocomplete="off">
+      <p class="hint">Key 不要发给别人，也不要把填了 Key 的页面公开分享。</p>
+    </details>
+  </div>
+
+  <div class="paint" id="paint" hidden>
+    <div id="palette" aria-label="常用颜色"></div>
+    <div class="paint-row">
+      <label id="custom-wrap" for="custom">自定义
+        <input type="color" id="custom" value="#ff6fb5">
+      </label>
+      <button class="tool" id="btn-erase">橡皮擦</button>
+      <button class="tool" id="btn-undo">撤销</button>
+      <button class="tool" id="btn-clear">清空</button>
+    </div>
+  </div>
+
+  <div class="controls" id="controls" hidden>
+    <label for="colors"><span>颜色数量</span><span id="colorsVal">16</span></label>
+    <input type="range" id="colors" min="4" max="32" value="16">
+    <label for="contrast" style="margin-top:12px"><span>对比度（人像看不清时调高）</span><span id="contrastVal">0</span></label>
+    <input type="range" id="contrast" min="0" max="100" value="0">
+  </div>
+
+  <p id="tip">点「上传照片」，选一张图试试</p>
+  <p id="hexinfo"></p>
+
+<script src="js/app.js" defer></script>
+</body>
+</html>

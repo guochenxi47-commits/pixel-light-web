@@ -1,0 +1,246 @@
+:root {
+    --bg: #15122b;
+    --panel: #201b3f;
+    --text: #f3efff;
+    --muted: #a59fcf;
+    --pink: #ff6fb5;
+    --mint: #7cf0c8;
+    --lilac: #b9a8ff;
+    --off: #2a2450;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+  }
+  header { width: 100%; max-width: 420px; margin-bottom: 20px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+  header p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+  /* 画框：模拟灯板外面的相框 */
+  .frame {
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 1;
+    background: var(--panel);
+    border-radius: 18px;
+    padding: 14px;
+    box-shadow: inset 0 0 0 3px #3a3270, 0 12px 30px rgba(0,0,0,.35);
+  }
+  /* 16×16 的圆形灯珠 */
+  #grid {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    gap: 3px;
+    touch-action: none;           /* 手指在格子上拖动时，不让页面跟着滚动 */
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #grid.drawing { cursor: crosshair; }
+  #grid.drawing .dot { transition: none; }   /* 绘制时去掉渐变，跟手更快 */
+  .dot {
+    border-radius: 50%;
+    background: var(--off);
+    transition: background .15s;
+  }
+
+  .actions {
+    width: 100%;
+    max-width: 420px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+  }
+  button {
+    font: inherit;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--bg);
+    border: 0;
+    border-radius: 14px;
+    padding: 14px 6px;
+    cursor: pointer;
+  }
+  button:active { transform: translateY(2px); }
+  button:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+  #btn-upload { background: var(--mint); }
+  #btn-draw   { background: var(--lilac); }
+  #btn-ai     { background: var(--pink); }
+
+  /* ===== 分辨率切换 ===== */
+  .sizes {
+    width: 100%;
+    max-width: 420px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .sizes button { background: var(--off); color: var(--text); padding: 11px 6px; }
+  .sizes button.on { background: var(--mint); color: var(--bg); }
+
+  /* ===== 连接设置 + 发送按钮 ===== */
+  .conn {
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 16px;
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  .conn-row { display: flex; align-items: center; gap: 10px; }
+  .conn-row label { color: var(--muted); white-space: nowrap; }
+  #ip {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    color: var(--text);
+    background: var(--off);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 9px 12px;
+  }
+  #ip:focus { outline: none; border-color: var(--mint); }
+  .demo-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .demo-row input { accent-color: var(--mint); width: 18px; height: 18px; }
+  #btn-send {
+    width: 100%;
+    max-width: 420px;
+    margin-top: 14px;
+    padding: 16px;
+    font-size: 17px;
+    background: var(--text);
+    color: var(--bg);
+  }
+  #btn-send:disabled { opacity: .55; cursor: wait; }
+  #tip.ok  { color: var(--mint); }
+  #tip.err { color: var(--pink); }
+
+  /* ===== AI 生成面板 ===== */
+  .ai {
+    width: 100%;
+    max-width: 420px;
+    margin-top: 18px;
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+  .ai[hidden] { display: none; }
+  .ai input[type=text], .ai input[type=password] {
+    width: 100%;
+    font: inherit;
+    color: var(--text);
+    background: var(--off);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .ai input:focus { outline: none; border-color: var(--pink); }
+  .ai-row { display: flex; gap: 8px; margin-top: 10px; }
+  #ai-go { flex: 2; background: var(--pink); }
+  #ai-idea { flex: 1; background: var(--off); color: var(--text); }
+  #ai-go:disabled { opacity: .55; cursor: wait; }
+  .ai .demo-row { margin-top: 12px; }
+  .ai details { margin-top: 12px; color: var(--muted); }
+  .ai summary { cursor: pointer; font-size: 13px; }
+  .ai details label { display: block; margin: 10px 0 4px; font-size: 12px; }
+  .ai .hint { font-size: 12px; line-height: 1.5; margin-top: 10px; }
+
+  /* ===== 手绘工具栏 ===== */
+  .paint {
+    width: 100%;
+    max-width: 420px;
+    margin-top: 18px;
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .paint[hidden] { display: none; }
+  #palette {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+  .swatch {
+    aspect-ratio: 1;
+    padding: 0;
+    border-radius: 50%;
+    border: 3px solid transparent;
+  }
+  .swatch.on { border-color: var(--text); }
+  .paint-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .paint-row .tool {
+    flex: 1;
+    padding: 10px 4px;
+    font-size: 14px;
+    background: var(--off);
+    color: var(--text);
+    border-radius: 12px;
+  }
+  .paint-row .tool.on { background: var(--lilac); color: var(--bg); }
+  #custom-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  #custom {
+    width: 40px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    cursor: pointer;
+  }
+  .controls {
+    width: 100%;
+    max-width: 420px;
+    margin-top: 18px;
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  .controls[hidden] { display: none; }
+  .controls label { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .controls input[type=range] { width: 100%; accent-color: var(--mint); }
+  #hexinfo {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+  #tip {
+    min-height: 22px;
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dot, button { transition: none; }
+  }
