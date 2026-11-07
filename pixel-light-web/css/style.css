@@ -43,7 +43,7 @@
     -webkit-user-select: none;
   }
   #grid.drawing { cursor: crosshair; 
-                touch-action:none}
+                touch-action: none;}
 
   .actions {
     width: 100%;
