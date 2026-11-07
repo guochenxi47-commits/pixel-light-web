@@ -38,11 +38,12 @@
     display: block;
     width: 100%;
     height: 100%;
-    touch-action: none; /* 仅在画布上绘画时阻止页面滚动 */
+    touch-action: pan-y; /* 仅在画布上绘画时阻止页面滚动 */
     user-select: none;
     -webkit-user-select: none;
   }
-  #grid.drawing { cursor: crosshair; }
+  #grid.drawing { cursor: crosshair; 
+                touch-action:none}
 
   .actions {
     width: 100%;
