@@ -483,6 +483,14 @@
     showHex();
   }
 
+  // 情绪灯预览可一键应用到主画布；复用现有像素数据与撤销逻辑。
+  window.addEventListener("pixel-mood-apply", event => {
+    const detail = event.detail || {};
+    if (!detail.palette || !Array.isArray(detail.rows) || detail.rows.length !== 32) return;
+    applyArt({ palette: detail.palette, rows: detail.rows });
+    setStatus("情绪灯画面已应用到主画布，可以继续手绘或发送到画框", "ok");
+  });
+
   // ---- 校验并修补模型返回的内容 ----
   function parseArt(text, N) {
     const t = text.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();

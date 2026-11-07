@@ -46,3 +46,16 @@ pixel-light-web/
 ## ESP32 注意事项
 
 线上 HTTPS 网站访问局域网 ESP32 的 HTTP 地址，可能受到浏览器混合内容和 CORS 限制。实体灯板到位后需要在目标浏览器和实际网络环境中联调；本次没有改变原有 `/upload` 协议。
+
+## V3 情绪灯功能
+
+本版本新增「情绪创作」模块：用户输入当下感受，可让 AI 自动选择或手动指定四种低刺激效果（柔和呼吸、缓慢流动、微光闪烁、静态微光）。AI 通过现有 Cloudflare Pages Function `POST /api/generate` 返回 32×32 像素行、调色板和动画参数；动画由浏览器 Canvas 本地循环播放，不会逐帧请求 AI。
+
+- Cloudflare Pages Secret 继续使用 `DEEPSEEK_API_KEY`，无需在前端填写或提交密钥。
+- 可调整动画速度与亮度，暂停/播放，并将情绪画面应用到主画布。
+- 主画布仍保留 16×16/32×32、照片转换和手绘；情绪灯输出为 32×32 图案，应用到16×16主画布时会按现有像素转换逻辑缩放。
+- 手机端主画布非绘画状态使用 `touch-action: pan-y`，进入手绘模式时才禁用画布手势滚动。
+
+### 部署
+
+将本项目目录中的 `index.html`、`css/`、`js/`、`functions/` 和 `README.md` 更新到 GitHub 仓库当前配置的 Pages 根目录。Cloudflare Pages 连接 GitHub 后会自动部署。确认项目 Production 环境 Secret `DEEPSEEK_API_KEY` 仍存在。不要把 API Key 写入任何文件。
