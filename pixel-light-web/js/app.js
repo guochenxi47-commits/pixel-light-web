@@ -3,31 +3,46 @@
   const EMPTY = "";                      // 空字符串表示灯是灭的
   let pixels = new Array(SIZE * SIZE).fill(EMPTY);
 
-  // ===== 画面：按当前分辨率生成圆点 =====
+  // ===== 画面：使用 Canvas 统一绘制像素，避免创建 256/1024 个 DOM 节点 =====
   const grid = document.getElementById("grid");
-  const dots = [];
+  const ctx = grid.getContext("2d");
+  let renderQueued = false;
+  function resizeCanvas() {
+    const rect = grid.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    grid.width = Math.max(1, Math.round(rect.width * dpr));
+    grid.height = Math.max(1, Math.round(rect.height * dpr));
+    render();
+  }
   function buildGrid() {
-    grid.innerHTML = "";
-    dots.length = 0;
-    grid.style.gridTemplateColumns = "repeat(" + SIZE + ", 1fr)";
-    grid.style.gridTemplateRows = "repeat(" + SIZE + ", 1fr)";
-    grid.style.gap = SIZE > 16 ? "1px" : "3px";
     grid.setAttribute("aria-label", SIZE + "乘" + SIZE + "的像素画预览");
-    for (let i = 0; i < SIZE * SIZE; i++) {
-      const d = document.createElement("div");
-      d.className = "dot";
-      grid.appendChild(d);
-      dots.push(d);
-    }
+    resizeCanvas();
+  }
+  function render() {
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(() => {
+      renderQueued = false;
+      const w = grid.width, h = grid.height;
+      if (!w || !h) return;
+      const cellW = w / SIZE, cellH = h / SIZE;
+      const offColor = getComputedStyle(document.documentElement).getPropertyValue("--off").trim() || "#2a2450";
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = offColor;
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < pixels.length; i++) {
+        const x = (i % SIZE) * cellW, y = Math.floor(i / SIZE) * cellH;
+        ctx.fillStyle = pixels[i] || offColor;
+        const r = Math.max(1, Math.min(cellW, cellH) * 0.46);
+        ctx.beginPath();
+        ctx.arc(x + cellW / 2, y + cellH / 2, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
   }
   buildGrid();
-
-  // 把 pixels 数组画到屏幕上
-  function render() {
-    for (let i = 0; i < pixels.length; i++) {
-      dots[i].style.background = pixels[i] || "";   // 空则用默认的暗色
-    }
-  }
+  if ("ResizeObserver" in window) new ResizeObserver(resizeCanvas).observe(grid);
+  else window.addEventListener("resize", resizeCanvas, { passive: true });
 
   // ===== 先放一个示例爱心，避免一开始是空白 =====
   const heart = [
@@ -173,9 +188,14 @@
   });
 
   const slider = document.getElementById("colors");
+  let convertFrame = 0;
+  function scheduleConvert() {
+    if (convertFrame) cancelAnimationFrame(convertFrame);
+    convertFrame = requestAnimationFrame(() => { convertFrame = 0; convert(); });
+  }
   slider.addEventListener("input", () => {
     document.getElementById("colorsVal").textContent = slider.value;
-    convert();
+    scheduleConvert();
   });
 
   // ===================== 第 3 步：手绘编辑器 =====================
@@ -252,7 +272,7 @@
     const value = tool === "erase" ? EMPTY : current;
     if (pixels[i] !== value) {
       pixels[i] = value;
-      dots[i].style.background = value || "";
+      render();
     }
   }
 
@@ -396,7 +416,7 @@
   const contrastSlider = document.getElementById("contrast");
   contrastSlider.addEventListener("input", () => {
     document.getElementById("contrastVal").textContent = contrastSlider.value;
-    convert();
+    scheduleConvert();
   });
 
   // ===================== 第 6 步：AI 生成 =====================
@@ -404,19 +424,10 @@
   const aiPrompt = document.getElementById("ai-prompt");
   const aiGo = document.getElementById("ai-go");
   const aiDemo = document.getElementById("ai-demo");
-  const aiBase = document.getElementById("ai-base");
-  const aiModel = document.getElementById("ai-model");
-  const aiKey = document.getElementById("ai-key");
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  // 记住接口地址和模型名；Key 只放在 sessionStorage（关闭标签页就清除）
-  aiBase.value = loadSetting("aiBase", "");
-  aiModel.value = loadSetting("aiModel", "");
-  try { aiKey.value = sessionStorage.getItem("aiKey") || ""; } catch (e) {}
+  // AI 由站点后端统一提供；浏览器不保存 API Key。
   aiDemo.checked = loadSetting("aiDemo", "1") === "1";
-  aiBase.addEventListener("input", () => saveSetting("aiBase", aiBase.value.trim()));
-  aiModel.addEventListener("input", () => saveSetting("aiModel", aiModel.value.trim()));
-  aiKey.addEventListener("input", () => { try { sessionStorage.setItem("aiKey", aiKey.value.trim()); } catch (e) {} });
   aiDemo.addEventListener("change", () => saveSetting("aiDemo", aiDemo.checked ? "1" : "0"));
 
   const IDEAS = ["戴帽子的小猫", "一杯冒热气的咖啡", "害羞的小幽灵", "会笑的太阳", "吃西瓜的小熊",
@@ -537,54 +548,22 @@
   function fatal(msg) { const e = new Error(msg); e.fatal = true; return e; }
 
   async function askModel(prompt, N, mode) {
-    const base = aiBase.value.trim().replace(/\/+$/, "");
-    const model = aiModel.value.trim();
-    const key = aiKey.value.trim();
-    if (!base || !model || !key) throw fatal("请先展开「接口设置」，填写接口地址、模型名和 API Key");
-
-    const gridSystem =
-      "You are a pixel artist designing for a " + N + "x" + N + " WS2812 LED matrix.\n" +
-      "Reply with ONLY a JSON object, no markdown, no explanation, in exactly this shape:\n" +
-      '{"palette":{"0":"#000000","1":"#rrggbb","2":"#rrggbb"},"rows":["...","..."]}\n' +
-      "Rules:\n" +
-      "- palette has at most 10 colors. Every key is a single character. Key \"0\" is always the background and must be #000000 (LED off).\n" +
-      "- rows has exactly " + N + " strings, each exactly " + N + " characters long, using only palette keys.\n" +
-      "- Draw one simple, bold, centered subject with a clear silhouette. Use bright, saturated colors that look good on LEDs. No text, no tiny details. Leave a 1-2 pixel margin.";
-
-    const system = mode === "svg" ? SVG_SYSTEM : gridSystem;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 120000);
     try {
-      const payload = {
-        model: model,
-        temperature: 0.7,
-        max_tokens: 4000,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: "Draw: " + prompt },
-        ],
-      };
-      // DeepSeek 默认开启“思考模式”，会先想很久再回答，画像素图不需要，关掉可以快很多
-      if (/deepseek/i.test(base)) payload.thinking = { type: "disabled" };
-
-      const res = await fetch(base + "/chat/completions", {
+      const res = await fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
-        body: JSON.stringify(payload),
-        signal: ctrl.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, size: N, mode }),
+        signal: ctrl.signal
       });
-      if (!res.ok) {
-        let detail = "";
-        try { detail = (await res.text()).slice(0, 120); } catch (e) {}
-        throw fatal("接口返回 " + res.status + (res.status === 401 ? "（API Key 可能不对）" : "") + " " + detail);
-      }
-      const data = await res.json();
-      return data.choices[0].message.content;
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw fatal(data.error || ("AI 接口返回 " + res.status));
+      if (typeof data.content !== "string" || !data.content.trim()) throw fatal("AI 返回内容为空");
+      return data.content;
     } catch (e) {
       if (e.fatal) throw e;
-      throw fatal(e.name === "AbortError"
-        ? "120 秒没有响应，请检查网络后重试"
-        : "网络请求失败：检查接口地址和网络；也可能是该接口不允许网页直接调用（跨域限制），这种情况需要一个小的转发服务");
+      throw fatal(e.name === "AbortError" ? "AI 请求超时，请稍后重试" : "无法连接云端 AI 服务，请检查网络或稍后重试");
     } finally {
       clearTimeout(timer);
     }

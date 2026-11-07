@@ -1,49 +1,48 @@
-# 像素灯网页项目（第一阶段）
+# 像素灯网页项目（Cloudflare Pages 版）
 
-这是从原始 `pixel-frame-step6-v3.html` 拆分出来的静态网页项目。
+保留原项目的 16×16 / 32×32 分辨率、照片转像素、手绘、橡皮擦、撤销、清空、AI 图案生成、数据导出和 ESP32 HTTP 发送功能。没有增加 64×64，也没有引入前端框架。
 
-## 当前目录
+## 项目结构
 
 ```text
 pixel-light-web/
-├── index.html       # 网页入口
-├── css/
-│   └── style.css    # 页面样式
-├── js/
-│   └── app.js       # 页面交互与功能逻辑
-└── README.md        # 本说明
+├── index.html
+├── css/style.css
+├── js/app.js
+├── functions/api/generate.js  # Cloudflare Pages 后端接口
+└── README.md
 ```
 
-## 如何运行
+## 本地预览
 
-### 最简单的方式
-直接用浏览器打开 `index.html`。照片转像素、手绘、分辨率切换、导出数据和演示模式等前端功能可以先进行本地检查。
+纯前端功能可以用 VS Code Live Server 预览。离线演示模式使用内置示例图案。
 
-### 推荐的本地方式
-在项目文件夹中启动一个静态文件服务器，例如 VS Code 的 Live Server，然后访问它提供的本地网址。
+真实 AI 生成需要 Cloudflare Pages Functions，因此应在 Cloudflare 部署后测试；普通静态服务器不会自动运行 `functions/` 后端代码。
 
-## 当前保留的功能
+## Cloudflare Pages 配置
 
-- 16×16 / 32×32 分辨率切换（没有增加 64×64）
-- 上传照片并转换为像素图
-- 手绘、橡皮擦、撤销、清空和调色
-- 颜色数量、对比度调整
-- AI 生成面板及内置演示图案
-- 像素数据导出与 ESP32 发送功能
+- Framework preset：None
+- Build command：留空
+- Build output directory：`.`
+- Root directory：指向包含 `index.html`、`css/`、`js/`、`functions/` 的项目目录。若 GitHub 仓库根目录下有一层 `pixel-light-web/`，Root directory 填 `pixel-light-web`。
+- 生产分支：`main`
 
-## 重要说明：AI 接口尚未迁移到云端
+部署后进入 Pages 项目 Settings → Variables and Secrets：
 
-这一阶段的目标只是把单文件拆成标准网页项目，尽量不改变原有功能逻辑。因此原版 AI 接口设置仍在前端页面中，当前仍需要在本地测试时自行填写接口地址、模型和 API Key。**不要把带有真实 API Key 的配置公开，也不要把当前版本直接作为公开服务发布给其他人使用。**
+- 添加 **Secret**：名称 `DEEPSEEK_API_KEY`，值填写你自己的 DeepSeek API Key。
+- 可选添加普通变量 `DEEPSEEK_MODEL`，值填写你在 DeepSeek 控制台确认可用的模型 ID；不添加时后端默认使用 `deepseek-flash`。
+- 保存后重新部署，使 Functions 读取到新密钥。
 
-下一阶段再接入 Cloudflare Workers：把 API Key 放在 Worker 的服务器端环境变量中，网页只请求自己的 `/api/generate` 接口。完成这一步后，普通使用者就不需要填写 API Key。
+**不要把 API Key 写进 HTML、JavaScript、GitHub 仓库或聊天消息。** 前端只请求同源 `/api/generate`，密钥只在 Pages Function 中读取。
 
-## 下一阶段建议
+## 性能优化说明
 
-1. 先确认本项目在本地浏览器中能正常运行。
-2. 再将 AI 请求从浏览器迁移到 Cloudflare Worker，隐藏 API Key。
-3. 然后部署到 Cloudflare Pages。
-4. 最后再针对卡顿做小范围性能优化；不增加超出小组能力和预算的功能。
+- 将原先 16×16 / 32×32 网格的 256 / 1024 个独立 DOM 圆点改为单个 Canvas 绘制，减少 DOM 节点与样式更新。
+- 绘制刷新通过 `requestAnimationFrame` 合并同一帧内的多次更新。
+- Canvas 根据设备像素比调整清晰度，并通过 ResizeObserver 响应尺寸变化。
+- 图片调整滑块的转换任务合并到动画帧，避免快速拖动时重复计算。
+- 仍然保留原来的指针绘制、撤销、清空、图片量化和 ESP32 数据格式。
 
-## ESP32 提醒
+## ESP32 注意事项
 
-网页在线部署后，浏览器访问局域网 ESP32 可能遇到 HTTPS/HTTP 混合内容或跨域限制。需要在实际灯板到位后单独联调；本阶段不改变原有发送协议。
+线上 HTTPS 网站访问局域网 ESP32 的 HTTP 地址，可能受到浏览器混合内容和 CORS 限制。实体灯板到位后需要在目标浏览器和实际网络环境中联调；本次没有改变原有 `/upload` 协议。

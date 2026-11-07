@@ -30,7 +30,7 @@
   </section>
 
   <main class="frame">
-    <div id="grid" role="img" aria-label="16乘16的像素画预览"></div>
+    <canvas id="grid" role="img" aria-label="32乘32的像素画预览"></canvas>
   </main>
 
   <div class="actions">
@@ -58,16 +58,7 @@
       <input type="checkbox" id="ai-demo" checked>
       离线演示（不联网，用内置示例图测试流程）
     </label>
-    <details>
-      <summary>接口设置（真正调用 AI 时才需要）</summary>
-      <label for="ai-base">接口地址（OpenAI 兼容格式，到 /v1 为止）</label>
-      <input type="text" id="ai-base" placeholder="在模型官方文档里找" autocomplete="off">
-      <label for="ai-model">模型名</label>
-      <input type="text" id="ai-model" placeholder="在模型官方文档里找" autocomplete="off">
-      <label for="ai-key">API Key（只保存在当前标签页，关掉就清除）</label>
-      <input type="password" id="ai-key" autocomplete="off">
-      <p class="hint">Key 不要发给别人，也不要把填了 Key 的页面公开分享。</p>
-    </details>
+    <p class="hint">在线 AI 服务由网站统一提供，无需填写 API Key。离线演示可随时体验内置示例图案。</p>
   </div>
 
   <div class="paint" id="paint" hidden>
