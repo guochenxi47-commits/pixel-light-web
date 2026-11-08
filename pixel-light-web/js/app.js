@@ -1,5 +1,5 @@
 // ===== 数据：16×16 = 256 个像素，每个是一个颜色字符串（后面几步都用它） =====
-  let SIZE = 32;                        // 当前分辨率，可在页面顶部切换 16 / 32
+  const SIZE = 16;                      // 全项目统一使用 16×16
   const EMPTY = "";                      // 空字符串表示灯是灭的
   let pixels = new Array(SIZE * SIZE).fill(EMPTY);
 
@@ -397,21 +397,7 @@
     }
   });
 
-  // ===================== 分辨率切换（16 / 32） =====================
-  function setSize(n) {
-    if (n === SIZE) return;
-    SIZE = n;
-    work.width = n; work.height = n;                  // 缩小用的小画布也要跟着改
-    undoStack.length = 0;
-    buildGrid();
-    if (sourceImg) { convert(); }                     // 有照片：用同一张照片按新分辨率重新转换
-    else { drawHeart(); showHex(); }                  // 没有照片：重置为示例爱心
-    document.getElementById("size16").classList.toggle("on", n === 16);
-    document.getElementById("size32").classList.toggle("on", n === 32);
-    setStatus(sourceImg ? "已切换到 " + n + "×" + n + "，同一张照片已重新转换" : "已切换到 " + n + "×" + n + "，画布已重置", "");
-  }
-  document.getElementById("size16").addEventListener("click", () => setSize(16));
-  document.getElementById("size32").addEventListener("click", () => setSize(32));
+  // 分辨率已统一固定为 16×16；不再提供 32×32 切换入口。
 
   const contrastSlider = document.getElementById("contrast");
   contrastSlider.addEventListener("input", () => {
@@ -436,7 +422,7 @@
     aiPrompt.value = IDEAS[Math.floor(Math.random() * IDEAS.length)];
   });
 
-  // ---- 离线演示用的内置示例（16×16，切到 32×32 时自动放大 2 倍） ----
+  // ---- 离线演示用的内置示例（固定 16×16） ----
   const DEMO_ART = [
     { keys: ["幽灵", "鬼", "ghost"],
       palette: { "0": "#000000", "1": "#f3efff", "2": "#5c6cff", "3": "#ff6fb5" },
@@ -482,6 +468,14 @@
     render();
     showHex();
   }
+
+  // 情绪灯预览可一键应用到主画布；复用现有像素数据与撤销逻辑。
+  window.addEventListener("pixel-mood-apply", event => {
+    const detail = event.detail || {};
+    if (!detail.palette || !Array.isArray(detail.rows) || detail.rows.length !== 16 || detail.rows.some(row => String(row).length !== 16)) return;
+    applyArt({ palette: detail.palette, rows: detail.rows });
+    setStatus("情绪灯画面已应用到主画布，可以继续手绘或发送到画框", "ok");
+  });
 
   // ---- 校验并修补模型返回的内容 ----
   function parseArt(text, N) {
