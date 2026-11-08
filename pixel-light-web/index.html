@@ -13,10 +13,7 @@
     <p>把喜欢的画面，变成桌上的一盏小灯</p>
   </header>
 
-  <div class="sizes" role="group" aria-label="分辨率">
-    <button id="size16">16 × 16</button>
-    <button id="size32" class="on">32 × 32</button>
-  </div>
+  <div class="resolution-note" aria-label="当前分辨率">统一分辨率：16 × 16</div>
 
   <section class="conn" aria-label="画框连接设置">
     <div class="conn-row">
@@ -30,7 +27,7 @@
   </section>
 
   <main class="frame">
-    <canvas id="grid" role="img" aria-label="32乘32的像素画预览"></canvas>
+    <canvas id="grid" role="img" aria-label="16乘16的像素画预览"></canvas>
   </main>
 
   <div class="actions">
@@ -80,9 +77,40 @@
     <input type="range" id="contrast" min="0" max="100" value="0">
   </div>
 
+
+  <section class="mood-panel" id="mood-panel" aria-labelledby="mood-title">
+    <div class="mood-heading">
+      <h2 id="mood-title">情绪创作</h2>
+      <p>把此刻的心情，变成一束安静的光。</p>
+    </div>
+    <label class="mood-label" for="mood-prompt">说说你现在的感受</label>
+    <textarea id="mood-prompt" maxlength="240" rows="3" placeholder="例如：今天有点累，想安静地休息一会儿。"></textarea>
+    <label class="mood-label" for="mood-motion">动态效果</label>
+    <select id="mood-motion">
+      <option value="auto">交给 AI 决定</option>
+      <option value="breathing">柔和呼吸</option>
+      <option value="flow">缓慢流动</option>
+      <option value="twinkle">微光闪烁</option>
+      <option value="static">静态微光</option>
+    </select>
+    <button id="mood-generate" type="button">生成我的情绪灯</button>
+    <div class="mood-preview-wrap">
+      <canvas id="mood-preview" width="160" height="160" aria-label="16乘16情绪灯动态预览"></canvas>
+      <p id="mood-status" role="status">输入心情，生成一幅专属的16×16像素灯画。</p>
+    </div>
+    <div class="mood-tools" id="mood-tools" hidden>
+      <button id="mood-play" type="button">暂停</button>
+      <label>速度 <input id="mood-speed" type="range" min="50" max="150" value="100"></label>
+      <label>亮度 <input id="mood-brightness" type="range" min="10" max="60" value="38"></label>
+      <button id="mood-apply" type="button">应用到主画布</button>
+    </div>
+    <p class="mood-note">动画在本地循环播放，不会持续调用 AI。实体灯连接功能将在硬件阶段接入。</p>
+  </section>
+
   <p id="tip">点「上传照片」，选一张图试试</p>
   <p id="hexinfo"></p>
 
 <script src="js/app.js" defer></script>
+<script src="js/mood.js" defer></script>
 </body>
 </html>
