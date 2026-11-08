@@ -38,12 +38,11 @@
     display: block;
     width: 100%;
     height: 100%;
-    touch-action: pan-y; /* 仅在画布上绘画时阻止页面滚动 */
+    touch-action: pan-y; /* 非绘画状态允许从画布区域上下滚动 */
     user-select: none;
     -webkit-user-select: none;
   }
-  #grid.drawing { cursor: crosshair; 
-                touch-action: none;}
+  #grid.drawing { cursor: crosshair; touch-action: none; }
 
   .actions {
     width: 100%;
@@ -238,3 +237,37 @@
   @media (prefers-reduced-motion: reduce) {
     .dot, button { transition: none; }
   }
+
+/* ===== 情绪创作：独立模块，沿用现有深色视觉 ===== */
+.mood-panel {
+  width: 100%; max-width: 420px; margin-top: 22px; padding: 16px;
+  background: linear-gradient(145deg, #282247, #201b3f);
+  border: 1px solid rgba(185,168,255,.22); border-radius: 18px;
+}
+.mood-heading h2 { font-size: 19px; margin-bottom: 5px; }
+.mood-heading p, .mood-note { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.mood-label { display:block; margin: 14px 0 7px; color:var(--muted); font-size:13px; }
+#mood-prompt, #mood-motion {
+  display:block; width:100%; border:1px solid #403866; border-radius:11px;
+  background:var(--off); color:var(--text); font:inherit; padding:11px 12px;
+}
+#mood-prompt { resize:vertical; min-height:72px; }
+#mood-motion { min-height:42px; }
+#mood-generate { width:100%; margin-top:12px; background:var(--lilac); color:var(--bg); }
+.mood-preview-wrap { margin-top:14px; padding:12px; background:#111027; border-radius:14px; text-align:center; }
+#mood-preview { display:block; width:min(100%,280px); height:auto; aspect-ratio:1; margin:0 auto; image-rendering:pixelated; border-radius:8px; background:#11152b; }
+#mood-status { min-height:20px; margin-top:9px; color:var(--muted); font-size:12px; }
+.mood-tools { display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin-top:12px; }
+.mood-tools[hidden] { display:none; }
+.mood-tools button { background:var(--off); color:var(--text); padding:10px 12px; font-size:13px; }
+.mood-tools label { display:flex; flex:1 1 130px; align-items:center; gap:7px; color:var(--muted); font-size:12px; }
+.mood-tools input { width:100%; min-width:65px; accent-color:var(--lilac); }
+#mood-apply { background:var(--mint); color:var(--bg); }
+.mood-note { margin-top:10px; }
+@media (prefers-reduced-motion: reduce) { #mood-preview { scroll-behavior:auto; } }
+
+.resolution-note {
+  width: 100%; max-width: 420px; margin: 0 auto 12px; padding: 9px 12px;
+  border: 1px solid rgba(124, 240, 200, .22); border-radius: 10px;
+  color: var(--muted); font-size: 12px; text-align: center;
+}
